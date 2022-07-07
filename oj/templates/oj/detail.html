@@ -9,7 +9,8 @@
     {{problem.statement}}
 </p>
 
-<form  enctype="multipart/form-data" method="post">
+<form action="{% url 'oj:submit' problem.id %}" enctype="multipart/form-data" method="post">
+    {% csrf_token %}
     <fieldset>
         <center><b>Submit your code<b></center>
         <HR>
