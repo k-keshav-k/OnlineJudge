@@ -1,6 +1,6 @@
 from django.utils import timezone
 import filecmp
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.http import HttpResponse
 import os
 from .models import Problems, Solutions
@@ -17,16 +17,16 @@ def problemDetail(request, problem_id):
 
 def submitCode(request, problem_id):
     f = request.FILES['solution']
-    with open('D:/onlineJudge_dir/onlineJudge/codeRunner/solution.cpp', 'wb+') as dest:
+    with open('codeRunner/solution.cpp', 'wb+') as dest:
         for chunk in f.chunks():
             dest.write(chunk)
         
-    sol = open('D:/onlineJudge_dir/onlineJudge/codeRunner/solution.cpp', "r")
-    os.system('g++ D:/onlineJudge_dir/onlineJudge/codeRunner/solution.cpp')
-    os.system('a.exe < D:/onlineJudge_dir/onlineJudge/codeRunner/inp.txt > D:/onlineJudge_dir/onlineJudge/codeRunner/out.txt')
+    sol = open('codeRunner/solution.cpp', "r")
+    os.system('g++ codeRunner/solution.cpp')
+    os.system('./a.out < codeRunner/inp.txt > codeRunner/out.txt')
 
-    out1 = 'D:/onlineJudge_dir/onlineJudge/codeRunner/out.txt'
-    out2 = 'D:/onlineJudge_dir/onlineJudge/codeRunner/actual_out.txt'
+    out1 = 'codeRunner/out.txt'
+    out2 = 'codeRunner/actual_out.txt'
 
     if(filecmp.cmp(out1, out2, shallow=False)):
         verdict = 'Accepted'
@@ -40,4 +40,10 @@ def submitCode(request, problem_id):
     solution.submitted_code = sol.read()
     solution.save()
 
-    return HttpResponse(verdict)
+    return redirect('oj:submissions')
+
+
+def submissions(request):
+    submission = Solutions.objects.all()
+    context = {'submission': submission}
+    return render(request, 'oj/submissions.html', context)
