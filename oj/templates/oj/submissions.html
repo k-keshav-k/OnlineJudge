@@ -24,7 +24,7 @@
             <tbody>
                 {% for item in submission %}
                     <tr>
-                        <td>1</td>
+                        <td>{{forloop.counter}}</td>
                         <td>{{ item.problem }}</td>
                         <td>{{ item.verdict }}</td>
                         <td>{{ item.submitted_at }}</td>

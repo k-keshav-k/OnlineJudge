@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.http import HttpResponse
 import os
 from .models import Problems, Solutions
+import tempfile
 
 def problems(request):
     problems_list = Problems.objects.all()
@@ -16,14 +17,15 @@ def problemDetail(request, problem_id):
     return render(request, 'oj/detail.html', context)
 
 def submitCode(request, problem_id):
-    f = request.FILES['solution']
-    with open('codeRunner/solution.cpp', 'wb+') as dest:
-        for chunk in f.chunks():
-            dest.write(chunk)
-        
-    sol = open('codeRunner/solution.cpp', "r")
-    os.system('g++ codeRunner/solution.cpp')
+    codeText = request.POST.get('textsolution')
+
+    tempSolution = tempfile.NamedTemporaryFile(suffix=".cpp")
+    tempSolution.write(str.encode(codeText))
+    tempSolution.seek(0)
+    
+    os.system('g++ ' + tempSolution.name)
     os.system('./a.out < codeRunner/inp.txt > codeRunner/out.txt')
+    tempSolution.close()
 
     out1 = 'codeRunner/out.txt'
     out2 = 'codeRunner/actual_out.txt'
@@ -37,7 +39,7 @@ def submitCode(request, problem_id):
     solution.problem = Problems.objects.get(pk=problem_id)
     solution.verdict = verdict
     solution.submitted_at = timezone.now()
-    solution.submitted_code = sol.read()
+    solution.submitted_code = codeText
     solution.save()
 
     return redirect('oj:submissions')
