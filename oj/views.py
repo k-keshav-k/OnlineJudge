@@ -22,21 +22,40 @@ def submitCode(request, problem_id):
     tempSolution.write(str.encode(codeText))
     tempSolution.seek(0)
 
-    tempOutput = tempfile.NamedTemporaryFile(suffix=".txt")
-    tempOutput.seek(0)
+    problem = get_object_or_404(Problems, pk=problem_id)
 
-    os.system('g++ ' + tempSolution.name + ' && ./a.out < codeRunner/inp.txt > ' + tempOutput.name)
+    inp = problem.testcases_set.all()
+
+    os.system('g++ ' + tempSolution.name)
+
     tempSolution.close()
 
-    out2 = 'codeRunner/actual_out.txt'
+    for i in inp:
+        tempOutput = tempfile.NamedTemporaryFile(suffix=".txt")
+        tempOutput.seek(0)
 
-    tempOutput.seek(0)
-    if(filecmp.cmp(out2, tempOutput.name, shallow=False)):
-        verdict = 'Accepted'
-    else:
-        verdict = 'Wrong Answer'
+        tempInput = tempfile.NamedTemporaryFile(suffix=".txt")
+        tempInput.write(str.encode(i.input))
 
-    tempOutput.close()
+        tempInput.seek(0)
+        os.system('./a.out < ' + tempInput.name + ' > ' + tempOutput.name)
+
+        tempActualOutput = tempfile.NamedTemporaryFile(suffix=".txt")
+        tempActualOutput.write(str.encode(i.output))
+
+        tempOutput.seek(0)
+        tempActualOutput.seek(0)
+        print(tempActualOutput.read())
+        print(tempOutput.read())
+        if(filecmp.cmp(tempActualOutput.name, tempOutput.name, shallow=False)):
+            verdict = 'Accepted'
+        else:
+            verdict = 'Wrong Answer'
+            break
+
+        tempOutput.close()
+        tempActualOutput.close()
+        tempInput.close()
 
     solution = Solutions()
     solution.problem = Problems.objects.get(pk=problem_id)
