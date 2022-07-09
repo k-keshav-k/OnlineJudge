@@ -1,9 +1,8 @@
 from django.utils import timezone
 import filecmp
 from django.shortcuts import get_object_or_404, render, redirect
-from django.http import HttpResponse
 import os
-from .models import Problems, Solutions
+from .models import Problems, Solutions, testCases
 import tempfile
 
 def problems(request):
@@ -22,18 +21,22 @@ def submitCode(request, problem_id):
     tempSolution = tempfile.NamedTemporaryFile(suffix=".cpp")
     tempSolution.write(str.encode(codeText))
     tempSolution.seek(0)
-    
-    os.system('g++ ' + tempSolution.name)
-    os.system('./a.out < codeRunner/inp.txt > codeRunner/out.txt')
+
+    tempOutput = tempfile.NamedTemporaryFile(suffix=".txt")
+    tempOutput.seek(0)
+
+    os.system('g++ ' + tempSolution.name + ' && ./a.out < codeRunner/inp.txt > ' + tempOutput.name)
     tempSolution.close()
 
-    out1 = 'codeRunner/out.txt'
     out2 = 'codeRunner/actual_out.txt'
 
-    if(filecmp.cmp(out1, out2, shallow=False)):
+    tempOutput.seek(0)
+    if(filecmp.cmp(out2, tempOutput.name, shallow=False)):
         verdict = 'Accepted'
     else:
         verdict = 'Wrong Answer'
+
+    tempOutput.close()
 
     solution = Solutions()
     solution.problem = Problems.objects.get(pk=problem_id)
