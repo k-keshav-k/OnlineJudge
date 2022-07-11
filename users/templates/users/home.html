@@ -1,0 +1,15 @@
+{% extends 'users/base.html' %}
+{% load static %}
+{% block content %}
+    <div class="container">
+            <div class="row g-0">
+                <div class="col-sm-6 col-md-8" id="header-text">
+                  <h1>proGAMEing</h1>
+                  <p id="header-paragraph">A platform to solve fun questions <br> Let's Solve Them !</p>
+                  <a class="btn" href="{% url 'oj:problems' %}" style="color: white; background-color: #fd5e14;"type="submit" id="body-link-row">Solve Problems</a>
+                </div>
+
+                <div class="col-6 col-md-4" id="header-image"></div>
+              </div>
+    </div>
+{% endblock content %}
