@@ -1,5 +1,4 @@
 from django.utils import timezone
-import filecmp
 from django.shortcuts import get_object_or_404, render, redirect
 import os
 from .models import Problems, Solutions, testCases
@@ -87,6 +86,6 @@ def submitCode(request, problem_id):
 
 @login_required
 def submissions(request):
-    submission = Solutions.objects.all()
+    submission = Solutions.objects.all().order_by('-submitted_at')
     context = {'submission': submission}
     return render(request, 'oj/submissions.html', context)
