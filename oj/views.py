@@ -49,9 +49,24 @@ def submitCode(request, problem_id):
 
         tempOutput.seek(0)
         tempActualOutput.seek(0)
-        print(tempActualOutput.read())
-        print(tempOutput.read())
-        if(filecmp.cmp(tempActualOutput.name, tempOutput.name, shallow=False)):
+        # print(tempActualOutput.read())
+        # print(tempOutput.read())
+        tempOutputStr = tempOutput.read().decode("utf-8")
+        tempActualOutputStr = ""
+        count = 0
+        with open(tempActualOutput.name, 'r') as var:
+            for line in var:
+                count = count+1
+                line = line.replace('\r', '')
+                tempActualOutputStr = tempActualOutputStr + line
+        
+        if (count != 0):
+            tempActualOutputStr = tempActualOutputStr + '\n'
+        
+        # print(tempActualOutputStr)
+        # print(tempOutputStr)
+
+        if(tempActualOutputStr == tempOutputStr):
             verdict = 'Accepted'
         else:
             verdict = 'Wrong Answer'
