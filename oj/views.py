@@ -4,17 +4,21 @@ from django.shortcuts import get_object_or_404, render, redirect
 import os
 from .models import Problems, Solutions, testCases
 import tempfile
+from django.contrib.auth.decorators import login_required
 
+@login_required
 def problems(request):
     problems_list = Problems.objects.all()
     context = {'problem_list':problems_list}
     return render(request, 'oj/index.html', context)
 
+@login_required
 def problemDetail(request, problem_id):
     problem = get_object_or_404(Problems, pk=problem_id)
     context = {'problem': problem}
     return render(request, 'oj/detail.html', context)
 
+@login_required
 def submitCode(request, problem_id):
     codeText = request.POST.get('textsolution')
 
@@ -66,7 +70,7 @@ def submitCode(request, problem_id):
 
     return redirect('oj:submissions')
 
-
+@login_required
 def submissions(request):
     submission = Solutions.objects.all()
     context = {'submission': submission}
