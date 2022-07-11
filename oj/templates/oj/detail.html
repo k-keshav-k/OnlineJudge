@@ -15,6 +15,13 @@
         <center><b>Submit your code<b></center>
         <HR>
         <div align="center">
+            <label for="language" >Choose a Language:</label>
+            <select id="language" name="language">
+                <option id="cpp" name="cpp">cpp</option>
+                <!-- <option id="c">C</option> -->
+                <option id="python" name="python">python</option>
+            </select>
+            <br>
             {{ value|linebreaks }}
             <textarea id="textsolution" name="textsolution" rows="30" cols="100"></textarea>
             <br><br>

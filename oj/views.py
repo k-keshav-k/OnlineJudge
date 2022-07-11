@@ -20,18 +20,26 @@ def problemDetail(request, problem_id):
 @login_required
 def submitCode(request, problem_id):
     codeText = request.POST.get('textsolution')
+    lang = request.POST.get('language')
+    print(lang)
+    tempSolutioncpp = tempfile.NamedTemporaryFile(suffix=".cpp")
+    tempSolutionpy = tempfile.NamedTemporaryFile(suffix=".py")
 
-    tempSolution = tempfile.NamedTemporaryFile(suffix=".cpp")
-    tempSolution.write(str.encode(codeText))
-    tempSolution.seek(0)
+    if (lang == "cpp"):
+        tempSolutioncpp.write(str.encode(codeText))
+        tempSolutioncpp.seek(0)
+        tempSolutionpy.close()
+    elif (lang == "python"):
+        tempSolutionpy.write(str.encode(codeText))
+        tempSolutionpy.seek(0)
+        tempSolutioncpp.close()
 
     problem = get_object_or_404(Problems, pk=problem_id)
 
     inp = problem.testcases_set.all()
 
-    os.system('g++ ' + tempSolution.name)
-
-    tempSolution.close()
+    if (lang == "cpp"):
+        os.system('g++ ' + tempSolutioncpp.name)
 
     for i in inp:
         tempOutput = tempfile.NamedTemporaryFile(suffix=".txt")
@@ -41,15 +49,17 @@ def submitCode(request, problem_id):
         tempInput.write(str.encode(i.input))
 
         tempInput.seek(0)
-        os.system('./a.out < ' + tempInput.name + ' > ' + tempOutput.name)
+        if (lang == "cpp"):
+            os.system('./a.out < ' + tempInput.name + ' > ' + tempOutput.name)
+        elif (lang == "python"):
+            os.system('python ' + tempSolutionpy.name + ' < ' + tempInput.name + ' > ' + tempOutput.name)
 
         tempActualOutput = tempfile.NamedTemporaryFile(suffix=".txt")
         tempActualOutput.write(str.encode(i.output))
 
         tempOutput.seek(0)
         tempActualOutput.seek(0)
-        # print(tempActualOutput.read())
-        # print(tempOutput.read())
+
         tempOutputStr = tempOutput.read().decode("utf-8")
         tempActualOutputStr = ""
         count = 0
@@ -59,13 +69,10 @@ def submitCode(request, problem_id):
                 line = line.replace('\r', '')
                 tempActualOutputStr = tempActualOutputStr + line
         
-        if (count != 0):
-            tempActualOutputStr = tempActualOutputStr + '\n'
-        
         # print(tempActualOutputStr)
         # print(tempOutputStr)
 
-        if(tempActualOutputStr == tempOutputStr):
+        if(tempActualOutputStr.strip() == tempOutputStr.strip()):
             verdict = 'Accepted'
         else:
             verdict = 'Wrong Answer'
@@ -74,6 +81,11 @@ def submitCode(request, problem_id):
         tempOutput.close()
         tempActualOutput.close()
         tempInput.close()
+    
+    if (lang == "cpp"):
+        tempSolutioncpp.close()
+    elif (lang == "python"):
+        tempSolutionpy.close()
 
     solution = Solutions()
     solution.problem = Problems.objects.get(pk=problem_id)
