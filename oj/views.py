@@ -40,15 +40,16 @@ def submitCode(request, problem_id):
     inp = problem.testcases_set.all()
 
     s = subprocess.check_output('docker ps', shell=True)
-    if s.find(str.encode('gcc')) == -1:
-        subprocess.run('docker run -d -it --name gcc -v /Users/keshavkrishna/Documents/django_pro/OnlineJudge:/home/ gcc', shell=True)
-
-    # subprocess.run('docker run -it --name gcc -v /Users/keshavkrishna/Documents/django_pro/OnlineJudge:/home/ gcc', shell=True)
-    # subprocess.run('docker exec -it gcc bash', shell=True)
+    if (lang == "cpp"):
+        if s.find(str.encode('gcc')) == -1:
+            subprocess.run('docker run -d -it --name gcc -v /Users/keshavkrishna/Documents/django_pro/OnlineJudge:/home/ gcc', shell=True)
+    if (lang == "python"):
+        if s.find(str.encode('python')) == -1:
+            subprocess.run('docker run -d -it --name python -v /Users/keshavkrishna/Documents/django_pro/OnlineJudge:/home/ python', shell=True)       
 
     if (lang == "cpp"):
-        # os.system('g++ ' + tempSolutioncpp.name)
         subprocess.run('docker exec gcc g++ /home/'+ os.path.basename(tempSolutioncpp.name), shell=True)
+
     for i in inp:
         tempOutput = tempfile.NamedTemporaryFile(suffix=".txt", dir='.')
         tempOutput.seek(0)
@@ -58,12 +59,10 @@ def submitCode(request, problem_id):
 
         tempInput.seek(0)
         if (lang == "cpp"):
-            # os.system('./a.out < ' + tempInput.name + ' > ' + tempOutput.name)
             subprocess.run('docker exec -i gcc ./a.out < ' + tempInput.name + ' > ' + tempOutput.name, shell=True)
-            # subprocess.run('exit', shell=True)
 
         elif (lang == "python"):
-            os.system('python ' + tempSolutionpy.name + ' < ' + tempInput.name + ' > ' + tempOutput.name)
+            subprocess.run("docker exec -i python python /home/"+ os.path.basename(tempSolutionpy.name)+ ' < '+ tempInput.name + ' > ' + tempOutput.name, shell=True)
         
         tempActualOutput = tempfile.NamedTemporaryFile(suffix=".txt", dir='.')
         tempActualOutput.write(str.encode(i.output))
