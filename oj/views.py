@@ -4,6 +4,7 @@ import os
 from .models import Problems, Solutions, testCases
 import tempfile
 from django.contrib.auth.decorators import login_required
+import subprocess
 
 @login_required
 def problems(request):
@@ -19,11 +20,11 @@ def problemDetail(request, problem_id):
 
 @login_required
 def submitCode(request, problem_id):
+
     codeText = request.POST.get('textsolution')
     lang = request.POST.get('language')
-    print(lang)
-    tempSolutioncpp = tempfile.NamedTemporaryFile(suffix=".cpp")
-    tempSolutionpy = tempfile.NamedTemporaryFile(suffix=".py")
+    tempSolutioncpp = tempfile.NamedTemporaryFile(suffix=".cpp", dir='.')
+    tempSolutionpy = tempfile.NamedTemporaryFile(suffix=".py", dir='.')
 
     if (lang == "cpp"):
         tempSolutioncpp.write(str.encode(codeText))
@@ -38,23 +39,33 @@ def submitCode(request, problem_id):
 
     inp = problem.testcases_set.all()
 
-    if (lang == "cpp"):
-        os.system('g++ ' + tempSolutioncpp.name)
+    s = subprocess.check_output('docker ps', shell=True)
+    if s.find(str.encode('gcc')) == -1:
+        subprocess.run('docker run -d -it --name gcc -v /Users/keshavkrishna/Documents/django_pro/OnlineJudge:/home/ gcc', shell=True)
 
+    # subprocess.run('docker run -it --name gcc -v /Users/keshavkrishna/Documents/django_pro/OnlineJudge:/home/ gcc', shell=True)
+    # subprocess.run('docker exec -it gcc bash', shell=True)
+
+    if (lang == "cpp"):
+        # os.system('g++ ' + tempSolutioncpp.name)
+        subprocess.run('docker exec gcc g++ /home/'+ os.path.basename(tempSolutioncpp.name), shell=True)
     for i in inp:
-        tempOutput = tempfile.NamedTemporaryFile(suffix=".txt")
+        tempOutput = tempfile.NamedTemporaryFile(suffix=".txt", dir='.')
         tempOutput.seek(0)
 
-        tempInput = tempfile.NamedTemporaryFile(suffix=".txt")
+        tempInput = tempfile.NamedTemporaryFile(suffix=".txt", dir='.')
         tempInput.write(str.encode(i.input))
 
         tempInput.seek(0)
         if (lang == "cpp"):
-            os.system('./a.out < ' + tempInput.name + ' > ' + tempOutput.name)
+            # os.system('./a.out < ' + tempInput.name + ' > ' + tempOutput.name)
+            subprocess.run('docker exec -i gcc ./a.out < ' + tempInput.name + ' > ' + tempOutput.name, shell=True)
+            # subprocess.run('exit', shell=True)
+
         elif (lang == "python"):
             os.system('python ' + tempSolutionpy.name + ' < ' + tempInput.name + ' > ' + tempOutput.name)
-
-        tempActualOutput = tempfile.NamedTemporaryFile(suffix=".txt")
+        
+        tempActualOutput = tempfile.NamedTemporaryFile(suffix=".txt", dir='.')
         tempActualOutput.write(str.encode(i.output))
 
         tempOutput.seek(0)
@@ -69,8 +80,8 @@ def submitCode(request, problem_id):
                 line = line.replace('\r', '')
                 tempActualOutputStr = tempActualOutputStr + line
         
-        # print(tempActualOutputStr)
-        # print(tempOutputStr)
+        print(tempActualOutputStr)
+        print(tempOutputStr)
 
         if(tempActualOutputStr.strip() == tempOutputStr.strip()):
             verdict = 'Accepted'
