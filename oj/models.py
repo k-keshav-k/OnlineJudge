@@ -2,7 +2,7 @@ from django.db import models
 
 # Create your models here.
 class Problems(models.Model):
-    statement = models.CharField(max_length=255)
+    statement = models.TextField()
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=50)
 

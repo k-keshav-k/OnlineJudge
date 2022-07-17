@@ -40,12 +40,15 @@ def submitCode(request, problem_id):
     inp = problem.testcases_set.all()
 
     s = subprocess.check_output('docker ps', shell=True)
+
+    strPath = os.getcwd()
+
     if (lang == "cpp"):
         if s.find(str.encode('gcc')) == -1:
-            subprocess.run('docker run -d -it --name gcc -v /Users/keshavkrishna/Documents/django_pro/OnlineJudge:/home/:ro gcc', shell=True)
+            subprocess.run(f'docker run -d -it --name gcc -v {strPath}:/home/:ro gcc', shell=True)
     if (lang == "python"):
         if s.find(str.encode('python')) == -1:
-            subprocess.run('docker run -d -it --name python -v /Users/keshavkrishna/Documents/django_pro/OnlineJudge:/home/:ro python', shell=True)       
+            subprocess.run(f'docker run -d -it --name python -v {strPath}:/home/:ro python', shell=True)     
 
     if (lang == "cpp"):
         subprocess.run('docker exec gcc g++ /home/'+ os.path.basename(tempSolutioncpp.name), shell=True)
